@@ -168,7 +168,7 @@ public:
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
         consensus.powLimit = uint256S("0x000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-		consensus.posLimit = uint256S("0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+		consensus.posLimit = uint256S("0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nTargetTimespan = 16 * 60;
         consensus.nTargetSpacing = 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
