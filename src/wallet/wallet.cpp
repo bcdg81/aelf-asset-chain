@@ -1791,7 +1791,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
 				const CTxOut &txout = tx->vout[i];
 				nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
 				if (!MoneyRange(nCredit))
-					throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+					throw std::runtime_error("CWalletTx::GetImmatureCredit() : value out of range");
 			}
 		}
 
@@ -1809,7 +1809,24 @@ CAmount CWalletTx::GetImmatureStakeCredit(bool fUseCache) const
     {
         if (fUseCache && fImmatureStakeCreditCached)
             return nImmatureStakeCreditCached;
-        nImmatureStakeCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+
+        if (pwallet == 0)
+            return 0;
+
+        CAmount nCredit = 0;
+		uint256 hashTx = GetHash();
+		for (unsigned int i = 0; i < tx->vout.size(); i++)
+		{
+			if (!pwallet->IsSpent(hashTx, i))
+			{
+				const CTxOut &txout = tx->vout[i];
+				nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+				if (!MoneyRange(nCredit))
+					throw std::runtime_error("CWalletTx::GetImmatureStakeCredit() : value out of range");
+			}
+		}
+
+        nImmatureStakeCreditCached = nCredit;
         fImmatureStakeCreditCached = true;
         return nImmatureStakeCreditCached;
     }
@@ -1853,7 +1870,24 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     {
         if (fUseCache && fImmatureWatchCreditCached)
             return nImmatureWatchCreditCached;
-        nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
+
+        if (pwallet == 0)
+            return 0;
+
+        CAmount nCredit = 0;
+		uint256 hashTx = GetHash();
+		for (unsigned int i = 0; i < tx->vout.size(); i++)
+		{
+			if (!pwallet->IsSpent(hashTx, i))
+			{
+				const CTxOut &txout = tx->vout[i];
+				nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
+				if (!MoneyRange(nCredit))
+					throw std::runtime_error("CWalletTx::GetImmatureWatchOnlyCredit() : value out of range");
+			}
+		}
+
+        nImmatureWatchCreditCached = nCredit;
         fImmatureWatchCreditCached = true;
         return nImmatureWatchCreditCached;
     }
