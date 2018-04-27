@@ -1778,7 +1778,24 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     {
         if (fUseCache && fImmatureCreditCached)
             return nImmatureCreditCached;
-        nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+
+        if (pwallet == 0)
+            return 0;
+
+        CAmount nCredit = 0;
+		uint256 hashTx = GetHash();
+		for (unsigned int i = 0; i < tx->vout.size(); i++)
+		{
+			if (!pwallet->IsSpent(hashTx, i))
+			{
+				const CTxOut &txout = tx->vout[i];
+				nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+				if (!MoneyRange(nCredit))
+					throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+			}
+		}
+
+    	nImmatureCreditCached = nCredit;
         fImmatureCreditCached = true;
         return nImmatureCreditCached;
     }
