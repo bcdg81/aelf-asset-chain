@@ -1448,11 +1448,18 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             assert(coins);
 
             // If prev is coinbase of coinstake, check that it's matured
-            if (coins->IsCoinBase() || coins->IsCoinStake()) {
+            if (coins->IsCoinBase()) {
                 if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
                     return state.Invalid(false,
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
+            }
+
+            if (coins->IsCoinStake() && !tx.IsCoinStake() ) {  //coinstake tx can use immature inputs
+                if (nSpendHeight - coins->nHeight < COINSTAKE_MATURITY)
+                    return state.Invalid(false,
+                        REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+                        strprintf("tried to spend coinstake at depth %d", nSpendHeight - coins->nHeight));
             }
 
             // Check for negative or overflow input values

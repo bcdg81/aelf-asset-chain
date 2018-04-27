@@ -4103,7 +4103,10 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    if (IsCoinBase())
+    	return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    if (IsCoinStake())
+    	return max(0, (COINSTAKE_MATURITY+1) - GetDepthInMainChain());
 }
 
 
@@ -4364,8 +4367,8 @@ void CWallet::AvailableCoinsForStaking(std::vector<COutput>& vCoins) const
             if (nDepth < STAKE_MIN_CONFIRMATIONS)
                 continue;
 
-            if (pcoin->GetBlocksToMaturity() > 0)
-                continue;
+            //if (pcoin->GetBlocksToMaturity() > 0)
+                //continue;
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++){
                 isminetype mine = IsMine(pcoin->tx->vout[i]);

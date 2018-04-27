@@ -118,10 +118,10 @@ public:
         nDefaultPort = 8666;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1521273300, 3159033644, 0x1d00ffff, 0x20000000, 0);
+        genesis = CreateGenesisBlock(1521273300, 3159033643, 0x1d00ffff, 0x20000000, 0);
         consensus.hashGenesisBlock = genesis.GetHash();
-        //assert(consensus.hashGenesisBlock == uint256S("0x00000000483cd5414acb036b64c8f3fa54af6bf774ddbb6450b148bba30e4147"));
-        //assert(genesis.hashMerkleRoot == uint256S("0x8bccdec22583a94cd24317a65d05e3ea28966dced1a31531a35436888af2d7ef"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000483cd5414acb036b64c8f3fa54af6bf774ddbb6450b148bba30e4147"));
+        assert(genesis.hashMerkleRoot == uint256S("0x8bccdec22583a94cd24317a65d05e3ea28966dced1a31531a35436888af2d7ef"));
 
         vSeeds.push_back(CDNSSeedData("seed1.aelf.io", "seed1.aelfat.aelf.io"));
         vSeeds.push_back(CDNSSeedData("seed2.aelf.io", "seed2.aelfat.aelf.io"));

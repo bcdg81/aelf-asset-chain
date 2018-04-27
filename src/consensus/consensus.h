@@ -21,6 +21,8 @@ static const int64_t MAX_BLOCK_SIGOPS_COST = 80000 * MAX_BLOCK_SIZE_SCALE;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 
+static const int COINSTAKE_MATURITY = 129600;
+
 /** Kernel input must have this number of confirmations (network rule) */
 static const int STAKE_MIN_CONFIRMATIONS = 100;
 
