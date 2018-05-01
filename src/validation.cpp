@@ -1223,8 +1223,28 @@ CAmount GetProofOfWorkSubsidy()
     return 1000000 * COIN;
 }
 
-CAmount GetProofOfStakeSubsidy()
+CAmount GetProofOfStakeSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+	assert(nHeight+1 > consensusParams.nLastPOWBlock);
+
+	int h = nHeight + 1 - consensusParams.nLastPOWBlock;
+
+	if (h <= 2100000) {
+		return 1.6 * COIN;
+	}else if(h <= 2100000 * 2){
+		return 0.8 * COIN;
+	}else if(h <= 2100000 * 3){
+		return 0.6 * COIN;
+	}else if(h <= 2100000 * 4){
+		return 0.4 * COIN;
+	}else if(h <= 2100000 * 5){
+		return 0.2 * COIN;
+	}else if(h <= 2100000 * 6){
+		return 0.125 * COIN;
+	}else if(h <= 2100000 * 20){
+		return 0.1 * COIN - 0.005 * COIN * (h/ 2100000 - 6);
+	}
+
     return 0;
 }
 
@@ -2223,7 +2243,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                    REJECT_INVALID, "bad-cb-amount");
     }
     if( block.IsProofOfStake()){
-        CAmount blockReward = nFees + GetProofOfStakeSubsidy();
+        CAmount blockReward = nFees + GetProofOfStakeSubsidy(pindex->pprev->nHeight, chainparams.GetConsensus());
          if (nActualStakeReward > blockReward)
              return state.DoS(100,
                               error("ConnectBlock(): coinstake pays too much (actual=%d vs limit=%d)",
