@@ -1,5 +1,7 @@
 *.tar.gz
 
+.project
+
 *.exe
 src/bitcoin
 src/bitcoind
