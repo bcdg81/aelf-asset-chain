@@ -1223,8 +1223,28 @@ CAmount GetProofOfWorkSubsidy()
     return 1000000 * COIN;
 }
 
-CAmount GetProofOfStakeSubsidy()
+CAmount GetProofOfStakeSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+	assert(nHeight+1 > consensusParams.nLastPOWBlock);
+
+	int h = nHeight + 1 - consensusParams.nLastPOWBlock;
+
+	if (h <= 2100000) {
+		return 1.6 * COIN;
+	}else if(h <= 2100000 * 2){
+		return 0.8 * COIN;
+	}else if(h <= 2100000 * 3){
+		return 0.6 * COIN;
+	}else if(h <= 2100000 * 4){
+		return 0.4 * COIN;
+	}else if(h <= 2100000 * 5){
+		return 0.2 * COIN;
+	}else if(h <= 2100000 * 6){
+		return 0.125 * COIN;
+	}else if(h <= 2100000 * 20){
+		return 0.1 * COIN - 0.005 * COIN * (h/ 2100000 - 6);
+	}
+
     return 0;
 }
 
@@ -1448,11 +1468,18 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             assert(coins);
 
             // If prev is coinbase of coinstake, check that it's matured
-            if (coins->IsCoinBase() || coins->IsCoinStake()) {
+            if (coins->IsCoinBase()) {
                 if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
                     return state.Invalid(false,
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
+            }
+
+            if (coins->IsCoinStake() && !tx.IsCoinStake() ) {  //coinstake tx can use immature inputs
+                if (nSpendHeight - coins->nHeight < COINSTAKE_MATURITY)
+                    return state.Invalid(false,
+                        REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+                        strprintf("tried to spend coinstake at depth %d", nSpendHeight - coins->nHeight));
             }
 
             // Check for negative or overflow input values
@@ -2216,7 +2243,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                    REJECT_INVALID, "bad-cb-amount");
     }
     if( block.IsProofOfStake()){
-        CAmount blockReward = nFees + GetProofOfStakeSubsidy();
+        CAmount blockReward = nFees + GetProofOfStakeSubsidy(pindex->pprev->nHeight, chainparams.GetConsensus());
          if (nActualStakeReward > blockReward)
              return state.DoS(100,
                               error("ConnectBlock(): coinstake pays too much (actual=%d vs limit=%d)",

@@ -1778,7 +1778,24 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     {
         if (fUseCache && fImmatureCreditCached)
             return nImmatureCreditCached;
-        nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+
+        if (pwallet == 0)
+            return 0;
+
+        CAmount nCredit = 0;
+		uint256 hashTx = GetHash();
+		for (unsigned int i = 0; i < tx->vout.size(); i++)
+		{
+			if (!pwallet->IsSpent(hashTx, i))
+			{
+				const CTxOut &txout = tx->vout[i];
+				nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+				if (!MoneyRange(nCredit))
+					throw std::runtime_error("CWalletTx::GetImmatureCredit() : value out of range");
+			}
+		}
+
+    	nImmatureCreditCached = nCredit;
         fImmatureCreditCached = true;
         return nImmatureCreditCached;
     }
@@ -1792,7 +1809,24 @@ CAmount CWalletTx::GetImmatureStakeCredit(bool fUseCache) const
     {
         if (fUseCache && fImmatureStakeCreditCached)
             return nImmatureStakeCreditCached;
-        nImmatureStakeCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+
+        if (pwallet == 0)
+            return 0;
+
+        CAmount nCredit = 0;
+		uint256 hashTx = GetHash();
+		for (unsigned int i = 0; i < tx->vout.size(); i++)
+		{
+			if (!pwallet->IsSpent(hashTx, i))
+			{
+				const CTxOut &txout = tx->vout[i];
+				nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+				if (!MoneyRange(nCredit))
+					throw std::runtime_error("CWalletTx::GetImmatureStakeCredit() : value out of range");
+			}
+		}
+
+        nImmatureStakeCreditCached = nCredit;
         fImmatureStakeCreditCached = true;
         return nImmatureStakeCreditCached;
     }
@@ -1836,7 +1870,24 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     {
         if (fUseCache && fImmatureWatchCreditCached)
             return nImmatureWatchCreditCached;
-        nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
+
+        if (pwallet == 0)
+            return 0;
+
+        CAmount nCredit = 0;
+		uint256 hashTx = GetHash();
+		for (unsigned int i = 0; i < tx->vout.size(); i++)
+		{
+			if (!pwallet->IsSpent(hashTx, i))
+			{
+				const CTxOut &txout = tx->vout[i];
+				nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
+				if (!MoneyRange(nCredit))
+					throw std::runtime_error("CWalletTx::GetImmatureWatchOnlyCredit() : value out of range");
+			}
+		}
+
+        nImmatureWatchCreditCached = nCredit;
         fImmatureWatchCreditCached = true;
         return nImmatureWatchCreditCached;
     }
@@ -4103,7 +4154,10 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    if (IsCoinBase())
+    	return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    if (IsCoinStake())
+    	return max(0, (COINSTAKE_MATURITY+1) - GetDepthInMainChain());
 }
 
 
@@ -4274,7 +4328,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, CBlock& block, int64_t 
 //  if (!GetCoinAge(txNew, *pblocktree, pindexPrev, nCoinAge))
 //      return error("CreateCoinStake : failed to calculate coin age");
 
-    int64_t nReward = GetProofOfStakeSubsidy();
+    int64_t nReward = GetProofOfStakeSubsidy(pindexPrev->nHeight, Params().GetConsensus());
     if (nReward < 0)
         return false;
 
@@ -4364,8 +4418,8 @@ void CWallet::AvailableCoinsForStaking(std::vector<COutput>& vCoins) const
             if (nDepth < STAKE_MIN_CONFIRMATIONS)
                 continue;
 
-            if (pcoin->GetBlocksToMaturity() > 0)
-                continue;
+            //if (pcoin->GetBlocksToMaturity() > 0)
+                //continue;
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++){
                 isminetype mine = IsMine(pcoin->tx->vout[i]);

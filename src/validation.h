@@ -287,7 +287,7 @@ bool GetTransaction(const uint256 &hash, CTransactionRef &tx, const Consensus::P
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
 CAmount GetProofOfWorkSubsidy();
-CAmount GetProofOfStakeSubsidy();
+CAmount GetProofOfStakeSubsidy(int nHeight, const Consensus::Params& consensusParams);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
